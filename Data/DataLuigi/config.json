@@ -7,7 +7,5 @@
         "descrizione":"Descrizione"
     },
     "valore_base": 1000,
-    "formato_data": "%d/%m/%Y",
-    "cartella": "../Data",
-    "cartella_estratto_conto": "DataLuigi"
+    "formato_data": "%d/%m/%Y"
 }
