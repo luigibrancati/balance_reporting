@@ -1,3 +1,5 @@
+call git checkout main
+call git pull
 call conda info --envs | find /i "balance"
 if errorlevel 1 (
    call conda create -n balance python==3.9 -y
