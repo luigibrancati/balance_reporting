@@ -6,6 +6,8 @@
         "abi":"Causale ABI",
         "descrizione":"Descrizione"
     },
+    "file_header_offset": 8,
     "valore_base": 1000,
-    "formato_data": "%d/%m/%Y"
+    "formato_data": "%d/%m/%Y",
+    "cartella":"DataLuigi"
 }

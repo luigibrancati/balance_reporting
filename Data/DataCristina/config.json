@@ -5,6 +5,8 @@
         "importo": "Importo",
         "descrizione":"Descrizione"
     },
+    "file_header_offset": 0,
     "valore_base": 1000,
-    "formato_data": "%d/%m/%Y"
+    "formato_data": "%d/%m/%Y",
+    "cartella":"DataCristina"
 }

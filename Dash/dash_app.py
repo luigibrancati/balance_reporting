@@ -1,10 +1,12 @@
+from dash.html.Label import Label
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import dash
 from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output
-from transform import import_df, preprocess_df, config
+import transform
+import dash_daq as daq
 
 number_formatting = "{:,.2f}" # La virgola separa le migliaia, e hanno 2 valori decimali
 mesi = ('Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre')
@@ -13,17 +15,15 @@ valuta = '€'
 figsize_px = (1200, 800)
 
 app = dash.Dash(__name__)
-df = import_df()
-df = preprocess_df(df)
-orig_cols = list(config.campi.values())
+df = None
 
 # Drawing Functions
 def draw_water(df_filtered):
-    dftotale = df_filtered.groupby(['Anno', 'Mese'], as_index=False)[config.campi['importo']].sum()\
+    dftotale = df_filtered.groupby(['Anno', 'Mese'], as_index=False)[transform.config.campi['importo']].sum()\
         .assign(Direzione='Totale').append(
-            df_filtered.groupby(['Anno', 'Mese', 'Direzione'], as_index=False)[config.campi['importo']].sum(),
+            df_filtered.groupby(['Anno', 'Mese', 'Direzione'], as_index=False)[transform.config.campi['importo']].sum(),
             ignore_index=True
-        ).rename({config.campi['importo']:'Balance'}, axis=1)
+        ).rename({transform.config.campi['importo']:'Balance'}, axis=1)
     dftotale['help_field'] = dftotale['Direzione'].apply(lambda d: {'Entrate':0, 'Uscite':1, 'Totale':2}[d])
     dftotale.sort_values(['Anno','Mese','help_field'], inplace=True)
     dftotale.drop('help_field', axis=1, inplace=True)
@@ -65,7 +65,7 @@ def draw_water(df_filtered):
     )
 
     df_cum = dftotale[dftotale['Direzione']=='Totale']
-    df_cum['Balance_cum'] = df_cum['Balance'].cumsum() + config.valore_base
+    df_cum['Balance_cum'] = df_cum['Balance'].cumsum() + transform.config.valore_base
     waterfall_balance.add_trace(
         go.Scatter(
             name='Cumulativo',
@@ -81,35 +81,38 @@ def draw_water(df_filtered):
     return waterfall_balance
 
 def draw_abi(df_filtered):
-    bar_abi = px.bar(
-        df_filtered.groupby([config.campi['abi'], 'Direzione'], as_index=False)[config.campi['importo']].sum(), 
-        x=config.campi['abi'], 
-        y=config.campi['importo'], 
-        text=config.campi['importo'],
-        labels={config.campi['importo']:f'Importo ({valuta})'}
-    )
+    try:
+        bar_abi = px.bar(
+            df_filtered.groupby([transform.config.campi['abi'], 'Direzione'], as_index=False)[transform.config.campi['importo']].sum(), 
+            x=transform.config.campi['abi'], 
+            y=transform.config.campi['importo'], 
+            text=transform.config.campi['importo'],
+            labels={transform.config.campi['importo']:f'Importo ({valuta})'}
+        )
 
-    bar_abi.update_layout(
-        title = "Importo per Causale ABI"+f"<br><sup>Importo transato (in entrata e in uscita) per ogni Causale ABI</sup>",
-        showlegend = True,
-        height = figsize_px[1],
-        width = figsize_px[0],
-        uniformtext_mode='hide',
-        uniformtext_minsize=8
-    )
+        bar_abi.update_layout(
+            title = "Importo per Causale ABI"+f"<br><sup>Importo transato (in entrata e in uscita) per ogni Causale ABI</sup>",
+            showlegend = True,
+            height = figsize_px[1],
+            width = figsize_px[0],
+            uniformtext_mode='hide',
+            uniformtext_minsize=8
+        )
 
-    bar_abi.update_traces(
-        textposition='outside',
-        texttemplate="%{text:,}"
-    )
-    return bar_abi
+        bar_abi.update_traces(
+            textposition='outside',
+            texttemplate="%{text:,}"
+        )
+        return bar_abi
+    except KeyError:
+        return None
 
 def draw_scatter(df_filtered, frac=0.6):
     trans_scatter = px.scatter(
         df_filtered,
-        x=config.campi['data_contabile'],
-        y=config.campi['importo'],
-        labels={config.campi['importo']:f'Importo ({valuta})'},
+        x=transform.config.campi['data_contabile'],
+        y=transform.config.campi['importo'],
+        labels={transform.config.campi['importo']:f'Importo ({valuta})'},
         trendline='lowess',
         trendline_color_override='red',
         trendline_options=dict(frac=frac)
@@ -155,8 +158,8 @@ def draw_indicators(df_filtered):
     indicators.add_trace(
         go.Indicator(
             mode='number+delta',
-            value=df_filtered[config.campi['importo']].sum()+config.valore_base,
-            delta={'reference':config.valore_base, 'relative': True, 'valueformat':',.0%'},
+            value=df_filtered[transform.config.campi['importo']].sum()+transform.config.valore_base,
+            delta={'reference':transform.config.valore_base, 'relative': True, 'valueformat':',.0%'},
             number={'prefix':valuta, 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
             domain={'x':[0,0.4], 'y':[0.6,1]},
             title={"text": 'Totale transazioni', 'font': {'size': indicator_title_size}}
@@ -166,7 +169,7 @@ def draw_indicators(df_filtered):
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=df_filtered[config.campi['importo']].count(),
+            value=df_filtered[transform.config.campi['importo']].count(),
             number={'valueformat':',.0f', 'font':{'size':indicator_font_size}},
             domain={'x':[0.6,1], 'y':[0.6,1]},
             title={"text": '# transazioni', 'font': {'size': indicator_title_size}}
@@ -176,7 +179,7 @@ def draw_indicators(df_filtered):
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=df_filtered[config.campi['importo']].max(),
+            value=df_filtered[transform.config.campi['importo']].max(),
             number={'prefix':valuta, 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
             domain={'x':[0,0.4], 'y':[0,0.4]},
             title={"text": 'Max in entrata', 'font': {'size': indicator_title_size}}
@@ -186,7 +189,7 @@ def draw_indicators(df_filtered):
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=df_filtered[config.campi['importo']].min(),
+            value=df_filtered[transform.config.campi['importo']].min(),
             number={'prefix':valuta, 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
             domain={'x':[0.6,1], 'y':[0,0.4]},
             title={"text": 'Max in uscita', 'font': {'size': indicator_title_size}}
@@ -245,7 +248,10 @@ def draw_table(df_filtered):
             'background_color': '#D2F3FF'
         } for i in selected_columns]
 
-def create_app():
+def create_app(data_folder):
+    transform.set_config(data_folder)
+    global df
+    df = transform.preprocess_df(transform.import_df())
     # Layout
     app.layout = html.Div(
         children=[
@@ -257,16 +263,6 @@ def create_app():
                         id='month_menu',
                         options=[{'label':f'{mesi[i-1]}', 'value':i} for i in sorted(df['Mese'].unique())],
                         value=sorted(list(df['Mese'].unique())),
-                        multi=True)
-            ]),
-            html.Div(
-                style={'height':'auto','width':figsize_px[0],'margin':'10px 0'},
-                children=[
-                    html.Label('Causale Abi'),
-                    dcc.Dropdown(
-                        id='abi_menu',
-                        options=[{'label':ca, 'value':ca} for ca in sorted(df[config.campi['abi']].unique())],
-                        value=sorted(list(df[config.campi['abi']].unique())),
                         multi=True)
             ]),
             html.Div(
@@ -311,10 +307,18 @@ def create_app():
                     )
             ]),
             html.Div(
-                style={'height':figsize_px[1],'width':figsize_px[0]},
+                style={'margin':'0 10px', 'textAlign':'left'},
                 children=[
-                    dcc.Graph(id='bar_abi')
-            ]),
+                    daq.BooleanSwitch(id='abi_switch', on=False, label='Causale ABI'),
+                    html.Br(),
+                    html.Div(
+                        id='div_abi',
+                        style={'height':figsize_px[1],'width':figsize_px[0]},
+                        children=[
+                            dcc.Graph(id='bar_abi')
+                    ])
+                ]
+            ),
             html.Div(
                 style={'height':figsize_px[1],'width':figsize_px[0]},
                 children=[
@@ -326,7 +330,7 @@ def create_app():
             )
     ])
 
-    global redraw_all, redraw_scatter
+    global redraw_all, redraw_scatter, hide_abi
     # Callback
     @app.callback(
         Output('indicators', 'figure'),
@@ -335,25 +339,30 @@ def create_app():
         Output('waterfall_balance', 'figure'),
         Output('all_table', 'children'),
         Input('month_menu', 'value'),
-        Input('abi_menu', 'value'),
         Input('direction_menu', 'value')
     )
-    def redraw_all(month, abi, direction):
-        df_filtered = df[(df['Mese'].isin(month)) & (df[config.campi['abi']].isin(abi)) & (df['Direzione'].isin(direction))]
+    def redraw_all(month, direction):
+        df_filtered = df[(df['Mese'].isin(month)) & (df['Direzione'].isin(direction))]
         return draw_indicators(df_filtered),\
             draw_pie(df_filtered),\
             draw_abi(df_filtered),\
             draw_water(df_filtered),\
-            draw_table(df_filtered[orig_cols])
+            draw_table(df_filtered[transform.orig_cols])
 
     @app.callback(
         Output('trans_scatter', 'figure'),
         Input('month_menu', 'value'),
-        Input('abi_menu', 'value'),
         Input('direction_menu', 'value'),
         Input('frac_slider', 'value')
     )
-    def redraw_scatter(month, abi, direction, frac):
-        df_filtered = df[(df['Mese'].isin(month)) & (df[config.campi['abi']].isin(abi)) & (df['Direzione'].isin(direction))]
+    def redraw_scatter(month, direction, frac):
+        df_filtered = df[(df['Mese'].isin(month)) & (df['Direzione'].isin(direction))]
         return draw_scatter(df_filtered, frac)
-    
+
+    @app.callback(
+        Output('div_abi', 'style'),
+        Input('abi_switch', 'on')
+    )
+    def hide_abi(abi_switch):
+        if not abi_switch:
+            return {'display':'none'}
