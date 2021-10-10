@@ -12,7 +12,7 @@ number_formatting = "{:,.2f}" # La virgola separa le migliaia, e hanno 2 valori 
 mesi = ('Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre')
 mesi_short = tuple(map(lambda e: e[:3], mesi))
 valuta = '€'
-figsize_px = (1200, 800)
+figsize_px = (1366, 768)
 
 app = dash.Dash(__name__)
 df = None
@@ -27,7 +27,7 @@ def draw_water(df_filtered):
     dftotale['help_field'] = dftotale['Direzione'].apply(lambda d: {'Entrate':0, 'Uscite':1, 'Totale':2}[d])
     dftotale.sort_values(['Anno','Mese','help_field'], inplace=True)
     dftotale.drop('help_field', axis=1, inplace=True)
-    dftotale['AnnoMese'] = dftotale.apply(lambda r: mesi[int(r['Mese'])-1]+" "+str(int(r['Anno'])), axis=1)
+    dftotale['AnnoMese'] = dftotale.apply(lambda r: mesi_short[int(r['Mese'])-1]+" "+str(int(r['Anno'])), axis=1)
     
 
     waterfall_balance = go.Figure()
@@ -53,11 +53,13 @@ def draw_water(df_filtered):
         showlegend = True,
         height = figsize_px[1],
         width = figsize_px[0],
-        uniformtext_mode = 'show',
+        uniformtext_mode = 'hide',
         uniformtext_minsize = 8,
         yaxis_title = f"Importo ({valuta})",
         transition_duration=500
     )
+
+    waterfall_balance.update_traces(textfont_size=12, textposition='outside')
 
     waterfall_balance.update_traces(
         textposition='outside',
@@ -145,7 +147,9 @@ def draw_pie(df_filtered):
     pie_spese.update_layout(
         title = 'Direzione spesa',
         uniformtext_mode='hide',
-        uniformtext_minsize=8
+        uniformtext_minsize=8,
+        height = figsize_px[1]*0.5,
+        width = figsize_px[0]*0.45
     )
 
     return pie_spese
@@ -196,6 +200,13 @@ def draw_indicators(df_filtered):
         )
     )
 
+    indicators.update_layout(
+        uniformtext_mode='hide',
+        uniformtext_minsize=8,
+        height = figsize_px[1]*0.5,
+        width = figsize_px[0]*0.45
+    )
+
     return indicators
 
 def draw_table(df_filtered):
@@ -204,7 +215,7 @@ def draw_table(df_filtered):
         columns=[{'name':i, 'id':i, 'deletable':True} for i in df_filtered.columns],
         data=df_filtered.to_dict('records'),
         export_format="csv",
-        style_table={'height':figsize_px[1], 'width':figsize_px[0]*0.9, 'overflowY': 'auto', 'overflowX':'auto'},
+        style_table={'width':figsize_px[0]*0.9, 'overflowY': 'auto', 'overflowX':'auto'},
         style_data={
             'overflow': 'hidden',
             'textOverflow': 'ellipsis',
@@ -227,7 +238,8 @@ def draw_table(df_filtered):
         sort_mode="multi",
         row_deletable=True,
         page_action="native",
-        page_current= 0
+        page_current= 0,
+        page_size=40
     )
 
     return [
@@ -256,27 +268,36 @@ def create_app(data_folder):
     app.layout = html.Div(
         children=[
             html.Div(
-                style={'height':'auto','width':figsize_px[0],'margin':'10px 0'},
+                id='filters_div',
+                style={'width':figsize_px[0]},
                 children=[
-                    html.Label('Mesi'),
-                    dcc.Dropdown(
-                        id='month_menu',
-                        options=[{'label':f'{mesi[i-1]}', 'value':i} for i in sorted(df['Mese'].unique())],
-                        value=sorted(list(df['Mese'].unique())),
-                        multi=True)
-            ]),
+                    html.Div(
+                        id='dates_div',
+                        children=[
+                            html.Label(id='dates_label', children='Date'),
+                            dcc.DatePickerRange(
+                                id='date_picker',
+                                start_date=df[transform.config.campi['data_contabile']].min(),
+                                end_date=df[transform.config.campi['data_contabile']].max(),
+                                display_format="Do MMM YYYY"
+                            )
+                    ]),
+                    html.Br(),
+                    html.Div(
+                        id='directions_div',
+                        children=[
+                            html.Label(id='directions_label', children='Direzione'),
+                            dcc.Dropdown(
+                                id='direction_menu',
+                                options=[{'label':ca, 'value':ca} for ca in sorted(df['Direzione'].unique())],
+                                value=sorted(list(df['Direzione'].unique())),
+                                multi=True)
+                    ])
+                ]
+            ),
             html.Div(
-                style={'height':'auto','width':figsize_px[0]*0.3,'margin':'10px 0'},
-                children=[
-                    html.Label('Direzione'),
-                    dcc.Dropdown(
-                        id='direction_menu',
-                        options=[{'label':ca, 'value':ca} for ca in sorted(df['Direzione'].unique())],
-                        value=sorted(list(df['Direzione'].unique())),
-                        multi=True)
-            ]),
-            html.Div(
-                style={"display":"flex"},
+                id='indicators_pie_div',
+                style={'width':figsize_px[0]},
                 children=[
                     html.Div(
                         style={'height':figsize_px[1]*0.5,'width':figsize_px[0]*0.45},
@@ -291,6 +312,7 @@ def create_app(data_folder):
                 ]
             ),
             html.Div(
+                id='trans_scatter_div',
                 style={'height':figsize_px[1]*1.1,'width':figsize_px[0]},
                 children=[
                     dcc.Graph(id='trans_scatter'),
@@ -307,7 +329,8 @@ def create_app(data_folder):
                     )
             ]),
             html.Div(
-                style={'margin':'0 10px', 'textAlign':'left'},
+                id='abi_div',
+                style={'width':figsize_px[0]},
                 children=[
                     daq.BooleanSwitch(id='abi_switch', on=False, label='Causale ABI'),
                     html.Br(),
@@ -325,8 +348,8 @@ def create_app(data_folder):
                     dcc.Graph(id='waterfall_balance')
             ]),
             html.Div(
-                id='all_table',
-                style={'height':figsize_px[1]*2,'width':figsize_px[0]},
+                id='all_table_div',
+                style={'width':figsize_px[0]},
             )
     ])
 
@@ -337,12 +360,13 @@ def create_app(data_folder):
         Output('pie_spese', 'figure'),
         Output('bar_abi', 'figure'),
         Output('waterfall_balance', 'figure'),
-        Output('all_table', 'children'),
-        Input('month_menu', 'value'),
+        Output('all_table_div', 'children'),
+        Input('date_picker', 'start_date'),
+        Input('date_picker', 'end_date'),
         Input('direction_menu', 'value')
     )
-    def redraw_all(month, direction):
-        df_filtered = df[(df['Mese'].isin(month)) & (df['Direzione'].isin(direction))]
+    def redraw_all(start_date, end_date, direction):
+        df_filtered = df[(df[transform.config.campi['data_contabile']]>=start_date) & (df[transform.config.campi['data_contabile']]<=end_date) & (df['Direzione'].isin(direction))]
         return draw_indicators(df_filtered),\
             draw_pie(df_filtered),\
             draw_abi(df_filtered),\
@@ -351,12 +375,13 @@ def create_app(data_folder):
 
     @app.callback(
         Output('trans_scatter', 'figure'),
-        Input('month_menu', 'value'),
+        Input('date_picker', 'start_date'),
+        Input('date_picker', 'end_date'),
         Input('direction_menu', 'value'),
         Input('frac_slider', 'value')
     )
-    def redraw_scatter(month, direction, frac):
-        df_filtered = df[(df['Mese'].isin(month)) & (df['Direzione'].isin(direction))]
+    def redraw_scatter(start_date, end_date, direction, frac):
+        df_filtered = df[(df[transform.config.campi['data_contabile']]>=start_date) & (df[transform.config.campi['data_contabile']]<=end_date) & (df['Direzione'].isin(direction))]
         return draw_scatter(df_filtered, frac)
 
     @app.callback(
