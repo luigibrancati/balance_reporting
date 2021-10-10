@@ -83,6 +83,7 @@ def draw_water(df_filtered):
     return waterfall_balance
 
 def draw_abi(df_filtered):
+    bar_abi = go.Figure()
     try:
         bar_abi = px.bar(
             df_filtered.groupby([transform.config.campi['abi'], 'Direzione'], as_index=False)[transform.config.campi['importo']].sum(), 
@@ -105,9 +106,9 @@ def draw_abi(df_filtered):
             textposition='outside',
             texttemplate="%{text:,}"
         )
-        return bar_abi
     except KeyError:
-        return None
+        pass
+    return bar_abi
 
 def draw_scatter(df_filtered, frac=0.6):
     trans_scatter = px.scatter(
