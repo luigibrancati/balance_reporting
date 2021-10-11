@@ -7,7 +7,7 @@
         "descrizione":"Descrizione"
     },
     "file_header_offset": 8,
-    "valore_base": 1000,
+    "valore_base": 12168.61,
     "formato_data": "%d/%m/%Y",
     "cartella":"DataLuigi"
 }

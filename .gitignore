@@ -1,7 +1,6 @@
-fulldf.csv
-*.xsl
+*.xls
 *.csv
-!abi.csv
+config.json
 
 # IDE
 .vscode
