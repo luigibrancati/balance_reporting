@@ -79,7 +79,7 @@ def import_df():
             [pd.read_excel(file, index_col=None, header=config.file_header_offset) if file.strip(".").split(".")[1]=='xls' else pd.read_csv(file, delimiter=';') for file in files]
         )
         try:
-            df_abi = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__name__)),'Data','abi.csv'), delimiter='|', index_col=None)
+            df_abi = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(__file__)),'Data','abi.csv'), delimiter='|', index_col=None)
             df = df[non_blank_col(df)]
             df_abi = df_abi[non_blank_col(df_abi)]
             df = df.merge(df_abi, how='left', left_on=config.campi['abi'], right_on='ABI', suffixes=(None,'_ABI')).drop('ABI', axis=1)
