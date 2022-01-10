@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output
 import transform
 import dash_daq as daq
 import graphics
+import filters
 
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
@@ -32,7 +33,7 @@ def update_styles(selected_columns):
     Input('date_picker', 'end_date'),
     Input('direction_menu', 'value')
 )
-def redraw_all(start_date, end_date, direction):
+def redraw_all_graphics(start_date, end_date, direction):
     df_filtered = df[(df[transform.config.campi['data_contabile']]>=start_date) & (df[transform.config.campi['data_contabile']]<=end_date) & (df['Direzione'].isin(direction))]
     return graphics.draw_indicators(df_filtered),\
         graphics.draw_pie(df_filtered),\
@@ -74,30 +75,7 @@ def create_app(data_folder):
             html.Div(
                 id='filters_div',
                 style={'width': graphics.figsize_px[0]},
-                children=[
-                    html.Div(
-                        id='dates_div',
-                        children=[
-                            html.Label(id='dates_label', children='Date'),
-                            dcc.DatePickerRange(
-                                id='date_picker',
-                                start_date=df[transform.config.campi['data_contabile']].min(),
-                                end_date=df[transform.config.campi['data_contabile']].max(),
-                                display_format="Do MMM YYYY"
-                            )
-                    ]),
-                    html.Br(),
-                    html.Div(
-                        id='directions_div',
-                        children=[
-                            html.Label(id='directions_label', children='Direzione'),
-                            dcc.Dropdown(
-                                id='direction_menu',
-                                options=[{'label':ca, 'value':ca} for ca in sorted(df['Direzione'].unique())],
-                                value=sorted(list(df['Direzione'].unique())),
-                                multi=True)
-                    ])
-                ]
+                children=filters.draw(df)
             ),
             html.Div(
                 id='indicators_pie_div',

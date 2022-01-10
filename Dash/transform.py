@@ -48,11 +48,11 @@ def add_date_info(df, date_field: pd.Timestamp, date_prefix: str=''):
 
 def convert_dates(df, null_val='Non contabilizzato'):
     df_temp = df.copy(deep=True)
+    df_temp[config.campi['data_valuta']] = df_temp[config.campi['data_valuta']].str.lower().replace(to_replace=null_val.lower(), value=pd.NA)
+    df_temp[config.campi['data_valuta']] = df_temp[config.campi['data_valuta']].combine_first(df_temp[config.campi['data_contabile']])
     for field in [config.campi['data_valuta'], config.campi['data_contabile']]:
-        df_temp[field].replace(to_replace=null_val, value=pd.to_datetime('today').strftime(config.formato_data), inplace=True)
         df_temp[field] = pd.to_datetime(df_temp[field], format=config.formato_data)
-    
-    df_temp.sort_values(by=config.campi['data_valuta'], ascending=False, inplace=True)
+    df_temp.sort_values(by=config.campi['data_contabile'], ascending=False, inplace=True)
     df_temp.set_index(np.array(range(1,len(df)+1,1)), inplace=True)
     df_temp['Contabilizzato'] = df_temp[config.campi['data_contabile']] >= df_temp[config.campi['data_valuta']]
     return df_temp
