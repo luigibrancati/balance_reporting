@@ -8,7 +8,7 @@ credit_discrete_map = {False: 'blue', True:'red'}
 
 @st.cache_data
 def load_data():
-    df = pl.read_csv('../Data/data*.csv', has_header=True, skip_rows=5, separator=';', try_parse_dates=True)
+    df = pl.read_csv('../Data/data*.csv', has_header=True, separator=';', try_parse_dates=True)
     df = (
         df.rename({'Data valuta':'Date'})
         .with_columns([
