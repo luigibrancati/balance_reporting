@@ -1,3 +1,4 @@
+rm -rf ~/.streamlit
 mkdir -p ~/.streamlit/
 mkdir -p ~/.streamlit/data
 echo "[server]
