@@ -5,10 +5,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 credit_discrete_map = {False: 'blue', True:'red'}
+files = 0
 
 @st.cache_data
 def load_data():
-    df = pl.read_csv('../Data/data*.csv', has_header=True, separator=';', try_parse_dates=True)
+    df = pl.read_csv('~/.streamlit/data/data*.csv', has_header=True, separator=';', try_parse_dates=True)
     df = (
         df.rename({'Data valuta':'Date'})
         .with_columns([
@@ -141,7 +142,19 @@ st.title("Balance Reporting")
 # Create a text element and let the reader know the data is loading.
 data_load_state = st.text('Loading data...')
 # Load the dataframe.
-data = load_data()
+try:
+    data = load_data()
+except pl.ComputeError:
+    data_load_state = st.text("It seems there's no data")
+    uploaded_file = st.file_uploader("Upload Data")
+    if uploaded_file is not None:
+        data_load_state.text("Received file")
+        file = pl.read_csv(uploaded_file, separator=';')
+        st.write(file.to_pandas())
+        data_load_state.text("Read file")
+        file.write_csv(f'~/.streamlit/data/data{files}.csv', separator=';')
+        data_load_state.text("Written file")
+        files += 1
 # Notify the reader that the data was successfully loaded.
 data_load_state.text("Done! (using st.cache_data)")
 
