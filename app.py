@@ -7,7 +7,6 @@ from plotly.subplots import make_subplots
 credit_discrete_map = {False: 'blue', True:'red'}
 files = 0
 
-@st.cache_data
 def load_data():
     df = pl.read_csv('~/.streamlit/data/*.csv', has_header=True, separator=';', try_parse_dates=True)
     df = (
