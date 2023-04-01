@@ -5,7 +5,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 credit_discrete_map = {False: 'blue', True:'red'}
-files = 0
+if 'files' not in st.session_state:
+    st.session_state['files'] = 0
 
 def load_data():
     df = pl.read_csv('~/.streamlit/data/*.csv', has_header=True, separator=';', try_parse_dates=True)
@@ -144,8 +145,8 @@ data_load_state = st.text('Loading data...')
 uploaded_file = st.sidebar.file_uploader("Upload Data")
 if uploaded_file is not None:
     file = pl.read_csv(uploaded_file, separator=';')
-    file.write_csv(f'~/.streamlit/data/data{files}.csv', separator=';')
-    files += 1
+    file.write_csv(f"~/.streamlit/data/data{st.session_state['files']}.csv", separator=';')
+    st.session_state['files'] += 1
 try:
     data = load_data()
 except pl.ComputeError:
