@@ -1,6 +1,6 @@
 import polars as pl
 import streamlit as st
-from functions import load_data, build_page, save_uploaded_file
+from functions import load_data, build_page, save_uploaded_files
 
 st.title("Balance Reporting")
 user = st.radio("Utente", ['Luigi', 'Cristina'], horizontal=True)
@@ -10,10 +10,10 @@ if f'files{user}' not in st.session_state:
 data_load_state = st.text('Loading data...')
 # Use form to load files
 with st.sidebar.form("file_uploader", clear_on_submit=True):
-    uploaded_file = st.file_uploader("FILE UPLOADER", accept_multiple_files=False)
+    uploaded_files = st.file_uploader("FILE UPLOADER", accept_multiple_files=True)
     submitted = st.form_submit_button("UPLOAD!")
-    if submitted and uploaded_file is not None:
-        save_uploaded_file(uploaded_file, user)
+    if submitted and uploaded_files is not None:
+        save_uploaded_files(uploaded_files, user)
 # load data and run the app
 try:
     # Load the dataframe.
