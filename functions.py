@@ -1,14 +1,13 @@
 import polars as pl
-import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from config import DATA_FOLDER, CREDIT_DISCRETE_MAP
+import streamlit as st
+import os
 
-credit_discrete_map = {False: 'blue', True:'red'}
-
-@st.cache_data
-def load_data():
-    df = pl.read_csv('../Data/data*.csv', has_header=True, skip_rows=5, separator=';', try_parse_dates=True)
+def load_data(user):
+    df = pl.read_csv(f'{DATA_FOLDER}/{user}/*.csv', has_header=True, separator=';', try_parse_dates=True)
     df = (
         df.rename({'Data valuta':'Date'})
         .with_columns([
@@ -25,6 +24,13 @@ def load_data():
     )
     df = df.sort('Date')
     return df
+
+def save_uploaded_file(uploaded_file, user):
+    if not os.path.exists(f"{DATA_FOLDER}/{user}"):
+        os.makedirs(f"{DATA_FOLDER}/{user}")
+    with open(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", 'wb') as output_file:
+        output_file.write(uploaded_file.read())
+    st.session_state[f'files{user}'] += 1
 
 def indicators(df):
     temp = df
@@ -120,7 +126,7 @@ def histplot(df):
         title = 'Amount distribution',
         facet_row = 'Credit',
         color = 'Credit',
-        color_discrete_map = credit_discrete_map,
+        color_discrete_map = CREDIT_DISCRETE_MAP,
         nbins = 50,
         height = 800
     )
@@ -132,6 +138,22 @@ def scatter(df):
         x = 'Date',
         y = 'Amount',
         color = 'Credit',
-        color_discrete_map=credit_discrete_map
+        color_discrete_map=CREDIT_DISCRETE_MAP
     )
     return fig
+
+def build_page(data):
+    start_date = st.date_input("Start date", data['Date'].min())
+    end_date = st.date_input("End date", data['Date'].max())
+    data = data.filter((pl.col('Date') >= start_date) & (pl.col('Date') <= end_date))
+
+    if st.checkbox('Show raw data'):
+        st.subheader('Raw data')
+        st.write(data.to_pandas())
+    st.subheader('Amounts')
+    st.plotly_chart(indicators(data))
+    st.plotly_chart(piecharts(data))
+    st.subheader('Amount distribution')
+    st.plotly_chart(histplot(data))
+    st.subheader('Transactions')
+    st.plotly_chart(scatter(data))
