@@ -25,12 +25,13 @@ def load_data(user):
     df = df.sort('Date')
     return df
 
-def save_uploaded_file(uploaded_file, user):
+def save_uploaded_files(uploaded_files, user):
     if not os.path.exists(f"{DATA_FOLDER}/{user}"):
         os.makedirs(f"{DATA_FOLDER}/{user}")
-    with open(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", 'wb') as output_file:
-        output_file.write(uploaded_file.read())
-    st.session_state[f'files{user}'] += 1
+    for upl_file in uploaded_files:
+        with open(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", 'wb') as output_file:
+            output_file.write(upl_file.read())
+        st.session_state[f'files{user}'] += 1
 
 def indicators(df):
     temp = df
