@@ -6,6 +6,10 @@ from config import CREDIT_DISCRETE_MAP
 import streamlit as st
 from file_management import file_upload_form, file_manager
 
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
+
 def build_sidebar(user):
     with st.sidebar:
         with st.container():
@@ -129,7 +133,6 @@ def build_page(data):
     start_date = st.date_input("Start date", data['Date'].min())
     end_date = st.date_input("End date", data['Date'].max())
     data = data.filter((pl.col('Date') >= start_date) & (pl.col('Date') <= end_date))
-
     if st.checkbox('Show raw data'):
         st.subheader('Raw data')
         st.write(data.to_pandas())
