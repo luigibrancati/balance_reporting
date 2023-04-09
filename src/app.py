@@ -3,7 +3,7 @@ import streamlit as st
 from functions import load_data, build_page, save_uploaded_files
 
 st.title("Balance Reporting")
-user = st.radio("Utente", ['Luigi', 'Cristina'], horizontal=True)
+user = st.radio("Utente", ['Luigi', 'Cristina'], horizontal=True).lower()
 if f'files{user}' not in st.session_state:
     st.session_state[f'files{user}'] = 0
 # Create a text element and let the reader know the data is loading.
