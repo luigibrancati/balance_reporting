@@ -1,4 +1,4 @@
-.stButton > button {
+.streamlit-expander .stButton > button {
     height: 25px;
     padding: 5px;
 }
