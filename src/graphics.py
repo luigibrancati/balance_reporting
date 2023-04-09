@@ -14,7 +14,7 @@ def indicators(df):
     indicator_title_size = 27
     indicators.add_trace(
         go.Indicator(
-            mode='number+delta',
+            mode='number',
             value=temp.filter(pl.col('Credit'))['Amount'].sum() - temp.filter(~pl.col('Credit'))['Amount'].sum(),
             delta={'reference':0.1, 'relative': True, 'valueformat':',.0%'},
             number={'prefix':'€', 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
@@ -67,12 +67,14 @@ def piecharts(df):
             pl.col('Amount').sum().alias('Amount'),
             pl.col('Date').count().alias('Count')
         ).select('Credit', pl.col('Amount')/pl.col('Amount').sum(), pl.col('Count')/pl.col('Count').sum())
+        .sort('Credit')
     )
     fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]], subplot_titles=("Amount", "Count"))
     fig.add_trace(
         go.Pie(
             labels = temp['Credit'].to_list(),
             values = temp['Amount'].to_list(),
+            marker_colors = temp['Credit'].apply(lambda c: CREDIT_DISCRETE_MAP[c]).to_list(),
             hole = 0.4
         ),
         row=1,
@@ -82,6 +84,7 @@ def piecharts(df):
         go.Pie(
             labels = temp['Credit'].to_list(),
             values = temp['Count'].to_list(),
+            marker_colors = temp['Credit'].apply(lambda c: CREDIT_DISCRETE_MAP[c]).to_list(),
             hole = 0.4
         ),
         row=1,
@@ -95,14 +98,15 @@ def histplot(df):
         data_frame = df.to_pandas(),
         x = 'Amount',
         histnorm = 'percent',
-        title = 'Amount distribution',
         facet_row = 'Credit',
         color = 'Credit',
         color_discrete_map = CREDIT_DISCRETE_MAP,
+        category_orders = {'Credit': [True, False]},
         nbins = 50,
         height = 800,
         width=GRAPHICS_WIDTH_PX
     )
+    # fig.update_layout(showlegend=False)
     return fig
 
 def scatter(df):
@@ -112,6 +116,7 @@ def scatter(df):
         y = 'Amount',
         color = 'Credit',
         color_discrete_map=CREDIT_DISCRETE_MAP,
+        category_orders = {'Credit': [True, False]},
         height = 800,
         width=GRAPHICS_WIDTH_PX
     )
