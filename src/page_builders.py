@@ -2,36 +2,18 @@ import polars as pl
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from config import DATA_FOLDER, CREDIT_DISCRETE_MAP
+from config import CREDIT_DISCRETE_MAP
 import streamlit as st
-import os
+from file_management import file_upload_form, file_manager
 
-def load_data(user):
-    df = pl.read_csv(f'{DATA_FOLDER}/{user}/*.csv', has_header=True, separator=';', try_parse_dates=True)
-    df = (
-        df.rename({'Data valuta':'Date'})
-        .with_columns([
-            pl.coalesce([pl.col('Entrate'), pl.col('Uscite')]).alias('Amount'),
-            pl.col('Entrate').is_not_null().alias('Credit'),
-            (pl.col('Causale') == 'EMOLUMENTI').alias('Salary'),
-            pl.col('Date').str.strptime(pl.Date, "%d/%m/%Y")
-        ])
-        .with_columns([
-            pl.col('Date').dt.year().alias('Year'),
-            pl.col('Date').dt.month().alias('Month')
-        ])
-        .select(['Date', 'Year', 'Month', 'Amount', 'Credit', 'Salary'])
-    )
-    df = df.sort('Date')
-    return df
-
-def save_uploaded_files(uploaded_files, user):
-    if not os.path.exists(f"{DATA_FOLDER}/{user}"):
-        os.makedirs(f"{DATA_FOLDER}/{user}")
-    for upl_file in uploaded_files:
-        with open(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", 'wb') as output_file:
-            output_file.write(upl_file.read())
-        st.session_state[f'files{user}'] += 1
+def build_sidebar(user):
+    with st.sidebar:
+        with st.container():
+            st.write(f"User: {user}")
+        with st.container():
+            file_upload_form(user)
+        with st.container():
+            file_manager(user)
 
 def indicators(df):
     temp = df
