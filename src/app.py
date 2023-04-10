@@ -1,7 +1,7 @@
 import polars as pl
 import streamlit as st
 from page_builders import build_page, build_sidebar, local_css
-from file_management import load_data
+from data_loader import load_data
 from authentication import check_password
 
 if check_password():
