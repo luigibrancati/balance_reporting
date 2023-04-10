@@ -2,7 +2,7 @@ import polars as pl
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from config import CREDIT_DISCRETE_MAP, GRAPHICS_WIDTH_PX
+from config import CREDIT_DISCRETE_MAP, GRAPHICS_WIDTH_PX, MIN_FONT_SIZE
 
 def indicators(df):
     temp = df
@@ -55,7 +55,7 @@ def indicators(df):
     )
     indicators.update_layout(
         uniformtext_mode='hide',
-        uniformtext_minsize=11,
+        uniformtext_minsize=MIN_FONT_SIZE,
         width=GRAPHICS_WIDTH_PX
     )
     return indicators
@@ -90,7 +90,13 @@ def piecharts(df):
         row=1,
         col=2
     )
-    fig.update_layout(height=500, width=GRAPHICS_WIDTH_PX, legend={'title':'Credit'})
+    fig.update_layout(
+        height=500,
+        width=GRAPHICS_WIDTH_PX,
+        legend={'title':'Credit'},
+        uniformtext_mode='hide',
+        uniformtext_minsize=MIN_FONT_SIZE,
+    )
     return fig
 
 def histplot(df):
@@ -98,15 +104,19 @@ def histplot(df):
         data_frame = df.to_pandas(),
         x = 'Amount',
         histnorm = 'percent',
-        facet_row = 'Credit',
+        barmode='group',
         color = 'Credit',
         color_discrete_map = CREDIT_DISCRETE_MAP,
         category_orders = {'Credit': [True, False]},
         nbins = 50,
         height = 800,
-        width=GRAPHICS_WIDTH_PX
+        width=GRAPHICS_WIDTH_PX,
+        labels = {'Amount':'Amount (€)'}
     )
-    # fig.update_layout(showlegend=False)
+    fig.update_layout(
+        uniformtext_mode='hide',
+        uniformtext_minsize=MIN_FONT_SIZE,
+    )
     return fig
 
 def scatter(df):
@@ -118,7 +128,12 @@ def scatter(df):
         color_discrete_map=CREDIT_DISCRETE_MAP,
         category_orders = {'Credit': [True, False]},
         height = 800,
-        width=GRAPHICS_WIDTH_PX
+        width=GRAPHICS_WIDTH_PX,
+        labels = {'Amount':'Amount (€)'}
+    )
+    fig.update_layout(
+        uniformtext_mode='hide',
+        uniformtext_minsize=MIN_FONT_SIZE,
     )
     return fig
 
@@ -149,6 +164,12 @@ def month_barplot(df):
         color_discrete_map=CREDIT_DISCRETE_MAP,
         category_orders = {'Credit': ['true', 'false', 'total']},
         height = 800,
-        width=GRAPHICS_WIDTH_PX
+        width=GRAPHICS_WIDTH_PX,
+        text_auto = '.1f',
+        labels = {'Amount':'Amount (€)'}
+    )
+    fig.update_layout(
+        uniformtext_mode='hide',
+        uniformtext_minsize=MIN_FONT_SIZE,
     )
     return fig
