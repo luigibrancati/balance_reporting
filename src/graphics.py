@@ -108,10 +108,11 @@ def histplot(df):
         color = 'Credit',
         color_discrete_map = CREDIT_DISCRETE_MAP,
         category_orders = {'Credit': [True, False]},
-        nbins = 50,
+        nbins = 40,
         height = 800,
         width=GRAPHICS_WIDTH_PX,
-        labels = {'Amount':'Amount (€)'}
+        labels = {'Amount':'Amount (€)'},
+        text_auto = '.1f'
     )
     fig.update_layout(
         uniformtext_mode='hide',
