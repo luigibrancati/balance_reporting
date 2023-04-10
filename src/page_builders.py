@@ -1,20 +1,21 @@
 import polars as pl
 import streamlit as st
-from file_manager import file_upload_form, file_lister
+from file_manager import file_lister
+from data_uploader import file_upload_form
 from graphics import indicators, histplot, piecharts, scatter
 
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
 
-def build_sidebar(user):
+def build_sidebar():
     with st.sidebar:
         with st.container():
-            st.write(f"User: {user}")
+            st.write(f"User: {st.session_state.username}")
         with st.container():
-            file_upload_form(user)
+            file_upload_form()
         with st.container():
-            file_lister(user)
+            file_lister()
 
 def build_page(data):
     start_date_col, end_date_col, _ = st.columns(3)

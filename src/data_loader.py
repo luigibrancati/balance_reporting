@@ -1,8 +1,9 @@
 import polars as pl
 from config import DATA_FOLDER
+import streamlit as st
 
-def load_data(user):
-    df = pl.read_csv(f'{DATA_FOLDER}/{user}/*.csv', has_header=True, separator=';', try_parse_dates=True)
+def load_data():
+    df = pl.read_csv(f'{DATA_FOLDER}/{st.session_state.username}/*.csv', has_header=True, separator=';', try_parse_dates=True)
     df = (
         df.rename({'Data valuta':'Date'})
         .with_columns([

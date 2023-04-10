@@ -6,12 +6,11 @@ from authentication import check_password
 
 if check_password():
     local_css("./src/style.css")
-    user = st.session_state['username']
-    build_sidebar(user)
+    build_sidebar()
     st.title("Balance Reporting")
     data_load_state = st.text('Loading data...')
     try:
-        data = load_data(user)
+        data = load_data()
         data_load_state.text("Done!")
         build_page(data)
     except pl.ComputeError:
