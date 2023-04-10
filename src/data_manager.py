@@ -13,7 +13,7 @@ def select_best_date_field(date_cols:list):
 
 def transform_data(df):
     # Coalesce numeric columns
-    numeric_columns = df.select(pl.col(pl.NUMERIC_DTYPES)).columns
+    numeric_columns = sorted(df.select(pl.col(pl.NUMERIC_DTYPES)).columns) # Entrate, Uscite
     bool_column = df.select(pl.col(pl.Boolean)).columns
     if len(numeric_columns) == 2 and len(bool_column) == 0:
         df = df.with_columns([
