@@ -1,8 +1,7 @@
 import polars as pl
 import streamlit as st
 from file_manager import file_lister
-from data_uploader import file_upload_form
-from data_loader import load_data
+from data_manager import file_upload_form, load_data
 from graphics import indicators, histplot, piecharts, scatter
 
 def local_css(file_name):
@@ -43,5 +42,5 @@ def build_page():
         data = load_data()
         data_load_state.text("Done!")
         build_graphics(data)
-    except pl.ComputeError:
+    except pl.ComputeError or FileNotFoundError:
         data_load_state.text("It seems there's no data")
