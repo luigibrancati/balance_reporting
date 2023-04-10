@@ -2,6 +2,7 @@ import polars as pl
 import streamlit as st
 from file_manager import file_lister
 from data_uploader import file_upload_form
+from data_loader import load_data
 from graphics import indicators, histplot, piecharts, scatter
 
 def local_css(file_name):
@@ -17,7 +18,7 @@ def build_sidebar():
         with st.container():
             file_lister()
 
-def build_page(data):
+def build_graphics(data):
     start_date_col, end_date_col, _ = st.columns(3)
     start_date = start_date_col.date_input("Start date", data['Date'].min())
     end_date = end_date_col.date_input("End date", data['Date'].max())
@@ -32,3 +33,15 @@ def build_page(data):
     st.plotly_chart(histplot(data))
     st.subheader('Transactions')
     st.plotly_chart(scatter(data))
+
+def build_page():
+    local_css("./src/style.css")
+    build_sidebar()
+    st.title("Balance Reporting")
+    data_load_state = st.text('Loading data...')
+    try:
+        data = load_data()
+        data_load_state.text("Done!")
+        build_graphics(data)
+    except pl.ComputeError:
+        data_load_state.text("It seems there's no data")
