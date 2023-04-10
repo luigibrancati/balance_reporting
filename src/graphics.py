@@ -111,8 +111,7 @@ def histplot(df):
         nbins = 40,
         height = 800,
         width=GRAPHICS_WIDTH_PX,
-        labels = {'Amount':'Amount (€)'},
-        text_auto = '.1f'
+        labels = {'Amount':'Amount (€)'}
     )
     fig.update_layout(
         uniformtext_mode='hide',
