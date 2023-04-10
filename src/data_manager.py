@@ -15,17 +15,16 @@ def transform_data(df):
     # Coalesce numeric columns
     numeric_columns = df.select(pl.col(pl.NUMERIC_DTYPES)).columns
     bool_column = df.select(pl.col(pl.Boolean)).columns
-    match len(numeric_columns), len(bool_column):
-        case 2, 0:
-            df = df.with_columns([
-                pl.coalesce(numeric_columns).round(2).alias('Amount'),
-                pl.col(numeric_columns[0]).is_not_null().alias('Credit')
-            ])
-        case 1, 1:
-            df = df.with_columns([
-                pl.col(numeric_columns).round(2).alias('Amount'),
-                pl.col(bool_column).round(2).alias('Credit')
-            ])
+    if len(numeric_columns) == 2 and len(bool_column) == 0:
+        df = df.with_columns([
+            pl.coalesce(numeric_columns).round(2).alias('Amount'),
+            pl.col(numeric_columns[0]).is_not_null().alias('Credit')
+        ])
+    elif len(numeric_columns) == 1 and len(bool_column) == 1:
+        df = df.with_columns([
+            pl.col(numeric_columns).round(2).alias('Amount'),
+            pl.col(bool_column).round(2).alias('Credit')
+        ])
     # select best date field
     best_date_col = select_best_date_field(
         list(filter(re.compile('^(data|date)', re.I).search, df.columns))
