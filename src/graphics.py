@@ -67,7 +67,7 @@ def piecharts(df):
             pl.col('Amount').sum().alias('Amount'),
             pl.col('Date').count().alias('Count')
         ).select('Credit', pl.col('Amount')/pl.col('Amount').sum(), pl.col('Count')/pl.col('Count').sum())
-        .sort('Credit')
+        .sort('Credit', descending=True)
     )
     fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]], subplot_titles=("Amount", "Count"))
     fig.add_trace(
@@ -117,6 +117,37 @@ def scatter(df):
         color = 'Credit',
         color_discrete_map=CREDIT_DISCRETE_MAP,
         category_orders = {'Credit': [True, False]},
+        height = 800,
+        width=GRAPHICS_WIDTH_PX
+    )
+    return fig
+
+def month_barplot(df):
+    temp = (
+        df.with_columns([
+            pl.col('Credit').cast(str),
+            pl.col('Date').dt.strftime('%Y-%m').alias('YearMonth')
+        ])
+        .groupby(['YearMonth', 'Credit'])
+        .agg(pl.sum('Amount').alias('Amount')).sort(['YearMonth', 'Credit'])
+    )
+    temp = pl.concat([
+        temp,
+        temp.pivot(values='Amount', columns='Credit', index=['YearMonth'])
+        .select(
+            'YearMonth',
+            pl.lit('total').alias('Credit'),
+            (pl.col('true') - pl.col('false')).alias('Amount')
+        )
+    ])
+    fig = px.bar(
+        data_frame=temp.to_pandas(),
+        x = 'YearMonth',
+        y = 'Amount',
+        color = 'Credit',
+        barmode='group',
+        color_discrete_map=CREDIT_DISCRETE_MAP,
+        category_orders = {'Credit': ['true', 'false', 'total']},
         height = 800,
         width=GRAPHICS_WIDTH_PX
     )

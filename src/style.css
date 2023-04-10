@@ -4,5 +4,6 @@
 }
 
 .main .block-container {
-    max-width: 65rem;
+    max-width: none;
+    padding: 9rem;
 }

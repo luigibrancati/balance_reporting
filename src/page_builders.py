@@ -2,7 +2,7 @@ import polars as pl
 import streamlit as st
 from file_manager import file_lister
 from data_manager import file_upload_form, load_data
-from graphics import indicators, histplot, piecharts, scatter
+from graphics import indicators, histplot, piecharts, scatter, month_barplot
 
 def local_css(file_name):
     with open(file_name) as f:
@@ -32,6 +32,8 @@ def build_graphics(data):
     st.plotly_chart(histplot(data))
     st.subheader('Transactions')
     st.plotly_chart(scatter(data))
+    st.subheader('Total by month')
+    st.plotly_chart(month_barplot(data))
 
 def build_page():
     local_css("./src/style.css")
