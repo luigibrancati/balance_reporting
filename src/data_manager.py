@@ -15,16 +15,19 @@ def transform_data(df):
     # Coalesce numeric columns
     numeric_columns = sorted(df.select(pl.col(pl.NUMERIC_DTYPES)).columns) # Entrate, Uscite
     bool_column = df.select(pl.col(pl.Boolean)).columns
+    df = df.with_columns([pl.col(col).fill_null(0.0) for col in numeric_columns])
     if len(numeric_columns) == 2 and len(bool_column) == 0:
-        df = df.with_columns([
-            pl.coalesce(numeric_columns).round(2).alias('Amount'),
-            pl.col(numeric_columns[0]).is_not_null().alias('Credit')
+        df = pl.concat([
+            df.with_columns([pl.col(numeric_columns[0]).alias('Amount'), pl.lit(True).alias('Credit')]).drop(numeric_columns),
+            df.with_columns([pl.col(numeric_columns[1]).alias('Amount'), pl.lit(False).alias('Credit')]).drop(numeric_columns)
         ])
     elif len(numeric_columns) == 1 and len(bool_column) == 1:
         df = df.with_columns([
             pl.col(numeric_columns).round(2).alias('Amount'),
             pl.col(bool_column).round(2).alias('Credit')
         ])
+    # filter out zeroes
+    df = df.filter(pl.col('Amount') > 0)
     # select best date field
     best_date_col = select_best_date_field(
         list(filter(re.compile('^(data|date)', re.I).search, df.columns))
@@ -44,27 +47,28 @@ def transform_data(df):
         ])
         return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit', 'Causale', 'Salary'])
     else:
-        return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit'])
+        return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit', pl.lit('').alias('Causale'), pl.lit(False).alias('Salary')])
 
 def save_uploaded_files():
-    user = st.session_state.username
-    if not os.path.exists(f"{DATA_FOLDER}/{user}"):
-        os.makedirs(f"{DATA_FOLDER}/{user}")
-    st.session_state[f'files{user}'] = len(glob(f"{DATA_FOLDER}/{user}/*.csv"))
-    for upl_file in st.session_state.uploaded_files:
-        file_df = pl.read_csv(upl_file, has_header=True, separator=';', try_parse_dates=True)
-        file_df = transform_data(file_df)
-        file_df.write_csv(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
-        st.session_state[f'files{user}'] += 1
+    if st.session_state['uploaded_files']:
+        user = st.session_state.username
+        if not os.path.exists(f"{DATA_FOLDER}/{user}"):
+            os.makedirs(f"{DATA_FOLDER}/{user}")
+        st.session_state[f'files{user}'] = len(glob(f"{DATA_FOLDER}/{user}/*.csv"))
+        for upl_file in st.session_state['uploaded_files']:
+            file_df = pl.read_csv(upl_file, has_header=True, separator=';', try_parse_dates=True)
+            file_df = transform_data(file_df)
+            file_df.write_csv(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
+            st.session_state[f'files{user}'] += 1
 
 def file_upload_form():
     user = st.session_state.username
     with st.expander("Data loader"):
         with st.form("file_uploader", clear_on_submit=True):
-            st.file_uploader("FILE UPLOADER", key='uploaded_files', accept_multiple_files=True)
+            st.session_state['uploaded_files'] = st.file_uploader("FILE UPLOADER", accept_multiple_files=True)
             st.session_state.username = user # For some reason session states not used in the form are reset
             submitted = st.form_submit_button("UPLOAD!")
-            if submitted is not None and st.session_state.get('uploaded_files'):
+            if submitted:
                 save_uploaded_files()
 
 def load_data():

@@ -10,30 +10,33 @@ def local_css(file_name):
 
 def build_sidebar():
     with st.sidebar:
-        with st.container():
-            st.write(f"User: {st.session_state.username}")
-        with st.container():
-            file_upload_form()
-        with st.container():
-            file_lister()
+        st.write(f"User: {st.session_state.username}")
+        file_upload_form()
+        file_lister()
 
-def build_graphics(data):
+def build_graphics(df):
     start_date_col, end_date_col, _ = st.columns(3)
-    start_date = start_date_col.date_input("Start date", data['Date'].min())
-    end_date = end_date_col.date_input("End date", data['Date'].max())
-    data = data.filter((pl.col('Date') >= start_date) & (pl.col('Date') <= end_date))
+    start_date = start_date_col.date_input("Start date", df['Date'].min())
+    end_date = end_date_col.date_input("End date", df['Date'].max())
+    amount_min, amount_max = st.slider("Amount", df['Amount'].min(), df['Amount'].max(), (df['Amount'].min(), df['Amount'].max()))
+    df = df.filter(
+        (pl.col('Date') >= start_date) &
+        (pl.col('Date') <= end_date) &
+        (pl.col('Amount') >= amount_min) &
+        (pl.col('Amount') <= amount_max)
+    )
     if st.checkbox('Show raw data'):
         st.subheader('Raw data')
-        st.dataframe(data.to_pandas(), use_container_width=True)
-    st.subheader('Amounts')
-    st.plotly_chart(indicators(data))
-    st.plotly_chart(piecharts(data))
+        st.dataframe(df.to_pandas(), use_container_width=True)
+    st.subheader('KPIs')
+    st.plotly_chart(indicators(df))
+    st.plotly_chart(piecharts(df))
     st.subheader('Amount distribution')
-    st.plotly_chart(histplot(data))
+    st.plotly_chart(histplot(df))
     st.subheader('Transactions')
-    st.plotly_chart(scatter(data))
+    st.plotly_chart(scatter(df))
     st.subheader('Total by month')
-    st.plotly_chart(month_barplot(data))
+    st.plotly_chart(month_barplot(df))
 
 def build_page():
     local_css("./src/style.css")
