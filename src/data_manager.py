@@ -50,24 +50,25 @@ def transform_data(df):
         return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit', pl.lit('').alias('Causale'), pl.lit(False).alias('Salary')])
 
 def save_uploaded_files():
-    user = st.session_state.username
-    if not os.path.exists(f"{DATA_FOLDER}/{user}"):
-        os.makedirs(f"{DATA_FOLDER}/{user}")
-    st.session_state[f'files{user}'] = len(glob(f"{DATA_FOLDER}/{user}/*.csv"))
-    for upl_file in st.session_state.uploaded_files:
-        file_df = pl.read_csv(upl_file, has_header=True, separator=';', try_parse_dates=True)
-        file_df = transform_data(file_df)
-        file_df.write_csv(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
-        st.session_state[f'files{user}'] += 1
+    if st.session_state['uploaded_files']:
+        user = st.session_state.username
+        if not os.path.exists(f"{DATA_FOLDER}/{user}"):
+            os.makedirs(f"{DATA_FOLDER}/{user}")
+        st.session_state[f'files{user}'] = len(glob(f"{DATA_FOLDER}/{user}/*.csv"))
+        for upl_file in st.session_state['uploaded_files']:
+            file_df = pl.read_csv(upl_file, has_header=True, separator=';', try_parse_dates=True)
+            file_df = transform_data(file_df)
+            file_df.write_csv(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
+            st.session_state[f'files{user}'] += 1
 
 def file_upload_form():
     user = st.session_state.username
     with st.expander("Data loader"):
         with st.form("file_uploader", clear_on_submit=True):
-            st.file_uploader("FILE UPLOADER", key='uploaded_files', accept_multiple_files=True)
+            st.session_state['uploaded_files'] = st.file_uploader("FILE UPLOADER", accept_multiple_files=True)
             st.session_state.username = user # For some reason session states not used in the form are reset
             submitted = st.form_submit_button("UPLOAD!")
-            if submitted is not None and st.session_state.get('uploaded_files'):
+            if submitted:
                 save_uploaded_files()
 
 def load_data():
