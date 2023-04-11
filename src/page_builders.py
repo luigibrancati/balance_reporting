@@ -15,15 +15,17 @@ def build_sidebar():
         file_lister()
 
 def build_graphics(df):
-    start_date_col, end_date_col, _ = st.columns(3)
+    start_date_col, end_date_col, credit_multi_col = st.columns(3)
     start_date = start_date_col.date_input("Start date", df['Date'].min())
     end_date = end_date_col.date_input("End date", df['Date'].max())
+    credit_multi = credit_multi_col.multiselect("Credit", [True, False], default=[True, False])
     amount_min, amount_max = st.slider("Amount", df['Amount'].min(), df['Amount'].max(), (df['Amount'].min(), df['Amount'].max()))
     df = df.filter(
         (pl.col('Date') >= start_date) &
         (pl.col('Date') <= end_date) &
         (pl.col('Amount') >= amount_min) &
-        (pl.col('Amount') <= amount_max)
+        (pl.col('Amount') <= amount_max) &
+        (pl.col('Credit').is_in(credit_multi))
     )
     if st.checkbox('Show raw data'):
         st.subheader('Raw data')
