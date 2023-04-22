@@ -1,20 +1,21 @@
 import polars as pl
 import streamlit as st
-from file_manager import file_lister
-from data_manager import file_upload_form, load_data
+from file_manager import file_lister, file_upload_form
+from data_manager import load_data
 from graphics import indicators, histplot, piecharts, scatter, month_barplot
+from pathlib import Path
 
-def local_css(file_name):
-    with open(file_name) as f:
+def local_css(filename:Path) -> None:
+    with open(filename) as f:
         st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
 
-def build_sidebar():
+def build_sidebar() -> None:
     with st.sidebar:
         st.write(f"User: {st.session_state.username}")
         file_upload_form()
         file_lister()
 
-def build_graphics(df):
+def build_graphics(df:pl.DataFrame) -> None:
     start_date_col, end_date_col, credit_multi_col = st.columns(3)
     start_date = start_date_col.date_input("Start date", df['Date'].min())
     end_date = end_date_col.date_input("End date", df['Date'].max())
@@ -40,7 +41,7 @@ def build_graphics(df):
     st.subheader('Total by month')
     st.plotly_chart(month_barplot(df))
 
-def build_page():
+def build_page() -> None:
     local_css("./src/style.css")
     build_sidebar()
     st.title("Balance Reporting")

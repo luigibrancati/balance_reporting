@@ -1,6 +1,19 @@
-.streamlit-expander .stButton > button {
+.streamlit-expander .stButton > button, .stDownloadButton > button {
     height: 25px;
+    max-width: 85px;
     padding: 5px;
+}
+
+.streamlit-expander .stDownloadButton {
+    float: inline-end;
+}
+
+.streamlit-expander .stButton {
+    float: inline-start;
+}
+
+div.stMarkdown p {
+    text-align: left;
 }
 
 .main .block-container {
