@@ -1,7 +1,7 @@
 import polars as pl
 import streamlit as st
-from file_manager import file_lister
-from data_manager import file_upload_form, load_data
+from file_manager import file_lister, file_upload_form
+from data_manager import load_data
 from graphics import indicators, histplot, piecharts, scatter, month_barplot
 from pathlib import Path
 
