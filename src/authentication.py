@@ -1,9 +1,9 @@
 import streamlit as st
 
-def check_password():
+def check_password() -> bool:
     """Returns `True` if the user had a correct password."""
 
-    def password_entered():
+    def password_entered() -> None:
         """Checks whether a password entered by the user is correct."""
         if (
             st.session_state["username"] in st.secrets["passwords"]

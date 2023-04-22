@@ -5,13 +5,13 @@ from glob import glob
 import re
 import polars as pl
 
-def select_best_date_field(date_cols:list):
+def select_best_date_field(date_cols:list[str]) -> str:
     best_data = list(filter(re.compile('data valuta', re.I).match, date_cols))
     if not best_data:
         best_data = date_cols
     return best_data[0]
 
-def transform_data(df):
+def transform_data(df:pl.DataFrame) -> pl.DataFrame:
     # Coalesce numeric columns
     numeric_columns = sorted(df.select(pl.col(pl.NUMERIC_DTYPES)).columns) # Entrate, Uscite
     bool_column = df.select(pl.col(pl.Boolean)).columns
@@ -49,7 +49,7 @@ def transform_data(df):
     else:
         return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit', pl.lit('').alias('Causale'), pl.lit(False).alias('Salary')])
 
-def save_uploaded_files():
+def save_uploaded_files() -> None:
     if st.session_state['uploaded_files']:
         user = st.session_state.username
         if not os.path.exists(f"{DATA_FOLDER}/{user}"):
@@ -61,7 +61,7 @@ def save_uploaded_files():
             file_df.write_csv(f"{DATA_FOLDER}/{user}/data{st.session_state[f'files{user}']}.csv", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
             st.session_state[f'files{user}'] += 1
 
-def file_upload_form():
+def file_upload_form() -> None:
     user = st.session_state.username
     with st.expander("Data loader"):
         with st.form("file_uploader", clear_on_submit=True):
@@ -71,7 +71,7 @@ def file_upload_form():
             if submitted:
                 save_uploaded_files()
 
-def load_data():
+def load_data() -> pl.DataFrame:
     df = pl.read_csv(f'{DATA_FOLDER}/{st.session_state.username}/*.csv', has_header=True, separator=';', try_parse_dates=True)
     if df['Date'].dtype != pl.Date:
         df = df.with_columns([

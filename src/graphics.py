@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from config import CREDIT_DISCRETE_MAP, GRAPHICS_WIDTH_PX, MIN_FONT_SIZE
 
-def indicators(df):
+def indicators(df:pl.DataFrame) -> go.Figure:
     temp = df
     indicators = make_subplots(
         2, 2,
@@ -60,7 +60,7 @@ def indicators(df):
     )
     return indicators
 
-def piecharts(df):
+def piecharts(df:pl.DataFrame) -> go.Figure:
     temp = (
         df.groupby('Credit')
         .agg(
@@ -99,7 +99,7 @@ def piecharts(df):
     )
     return fig
 
-def histplot(df):
+def histplot(df:pl.DataFrame) -> go.Figure:
     fig = px.histogram(
         data_frame = df.to_pandas(),
         x = 'Amount',
@@ -119,7 +119,7 @@ def histplot(df):
     )
     return fig
 
-def scatter(df):
+def scatter(df:pl.DataFrame) -> go.Figure:
     fig = px.scatter(
         data_frame = df.to_pandas(),
         x = 'Date',
@@ -137,7 +137,7 @@ def scatter(df):
     )
     return fig
 
-def month_barplot(df):
+def month_barplot(df:pl.DataFrame) -> go.Figure:
     temp = (
         df.with_columns([
             pl.col('Credit').cast(str),
