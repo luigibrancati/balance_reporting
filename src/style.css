@@ -1,5 +1,6 @@
-.streamlit-expander .stButton > button {
+.streamlit-expander .stButton > button, .stDownloadButton > button {
     height: 25px;
+    width: 85px;
     padding: 5px;
 }
 
