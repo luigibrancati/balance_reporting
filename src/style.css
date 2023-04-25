@@ -20,3 +20,7 @@ div.stMarkdown p {
     max-width: 90rem;
     padding: 3rem;
 }
+
+.section {
+    min-width: 450px;
+}
