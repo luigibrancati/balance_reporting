@@ -43,9 +43,29 @@ def transform_data(df:pl.DataFrame) -> pl.DataFrame:
             pl.col(causale_col).alias('Causale'),
             (pl.col(causale_col) == 'EMOLUMENTI').alias('Salary')
         ])
-        return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit', 'Causale', 'Salary'])
+        return df.select([
+            'Date',
+            'Year',
+            'Month',
+            'Amount',
+            'Credit',
+            'Causale',
+            'Salary',
+            'Conto',
+            'Banca'
+        ])
     else:
-        return df.select(['Date', 'Year', 'Month', 'Amount', 'Credit', pl.lit('').alias('Causale'), pl.lit(False).alias('Salary')])
+        return df.select([
+            'Date',
+            'Year',
+            'Month',
+            'Amount',
+            'Credit',
+            pl.lit('').alias('Causale'),
+            pl.lit(False).alias('Salary'),
+            pl.lit(None).alias('Conto'),
+            pl.lit(None).alias('Banca')
+        ])
 
 def load_data() -> pl.DataFrame:
     df = pl.read_csv(f'{DATA_FOLDER}/{st.session_state.username}/*.csv', has_header=True, separator=';', try_parse_dates=True)
