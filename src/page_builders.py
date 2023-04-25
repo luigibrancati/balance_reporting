@@ -1,9 +1,10 @@
 import polars as pl
 import streamlit as st
-from file_manager import file_lister, file_upload_form
+from file_manager import file_lister, file_upload_form, list_files
 from data_manager import load_data
 from graphics import indicators, histplot, piecharts, scatter, month_barplot
 from pathlib import Path
+from exceptions import NoDataException
 
 def local_css(filename:Path) -> None:
     with open(filename) as f:
@@ -13,7 +14,7 @@ def build_sidebar() -> None:
     with st.sidebar:
         st.write(f"User: {st.session_state.username}")
         file_upload_form()
-        file_lister()
+        file_lister(list_files())
 
 def build_graphics(df:pl.DataFrame) -> None:
     start_date_col, end_date_col, credit_multi_col, conto_multi_col = st.columns(4)
@@ -49,8 +50,8 @@ def build_page() -> None:
     st.title("Balance Reporting")
     data_load_state = st.text('Loading data...')
     try:
-        data = load_data()
+        data = load_data(list_files())
         data_load_state.text("Done!")
         build_graphics(data)
-    except pl.ComputeError or FileNotFoundError:
+    except NoDataException:
         data_load_state.text("It seems there's no data")

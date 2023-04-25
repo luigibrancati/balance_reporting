@@ -1,7 +1,8 @@
-from config import DATA_FOLDER
 import streamlit as st
 import re
 import polars as pl
+from pathlib import Path
+from exceptions import NoDataException
 
 def select_best_date_field(date_cols:list[str]) -> str:
     best_data = list(filter(re.compile('data valuta', re.I).match, date_cols))
@@ -67,10 +68,17 @@ def transform_data(df:pl.DataFrame) -> pl.DataFrame:
             pl.lit(None).alias('Banca')
         ])
 
-def load_data() -> pl.DataFrame:
-    df = pl.read_csv(f'{DATA_FOLDER}/{st.session_state.username}/*.csv', has_header=True, separator=';', try_parse_dates=True)
-    if df['Date'].dtype != pl.Date:
-        df = df.with_columns([
-            pl.col('Date').str.strptime(pl.Date, '%Y-%m-%d')
+@st.cache_data
+def load_data(filelist: list[Path]) -> pl.DataFrame:
+    # df = pl.read_csv(f'{DATA_FOLDER}/{st.session_state.username}/*.csv', has_header=True, separator=';', try_parse_dates=True)
+    if filelist:
+        df = pl.concat([
+            pl.read_csv(file, has_header=True, separator=';', try_parse_dates=True) for file in filelist
         ])
-    return df.sort('Date')
+        if df['Date'].dtype != pl.Date:
+            df = df.with_columns([
+                pl.col('Date').str.strptime(pl.Date, '%Y-%m-%d')
+            ])
+        return df.sort('Date')
+    else:
+        raise NoDataException()
