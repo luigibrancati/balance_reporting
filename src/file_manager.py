@@ -4,7 +4,6 @@ import os
 from glob import glob
 import polars as pl
 from pathlib import Path
-from typing import Generator
 from data_manager import transform_data
 
 def save_uploaded_files() -> None:
