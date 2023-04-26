@@ -129,7 +129,8 @@ def scatter(df:pl.DataFrame) -> go.Figure:
         category_orders = {'Credit': [True, False]},
         height = 800,
         width=GRAPHICS_WIDTH_PX,
-        labels = {'Amount':'Amount (€)'}
+        labels = {'Amount':'Amount (€)'},
+        hover_data=['Date', 'Amount', 'Credit', 'Conto']
     )
     fig.update_layout(
         uniformtext_mode='hide',
