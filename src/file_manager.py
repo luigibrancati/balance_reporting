@@ -15,7 +15,7 @@ def save_uploaded_files() -> None:
         for upl_file in st.session_state['uploaded_files']:
             file_df = pl.read_csv(upl_file, has_header=True, separator=';', try_parse_dates=True)
             file_df = transform_data(file_df)
-            filename = f"{file_df['Date'].min().strftime('%Y%m%d')}_{file_df['Date'].max().strftime('%Y%m%d')}.csv"
+            filename = f"{file_df['Date'].min().strftime('%y%m%d')}_{file_df['Date'].max().strftime('%y%m%d')}_{file_df['Conto'][0]}.csv"
             file_df.write_csv(f"{DATA_FOLDER}/{user}/{filename}", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
 
 def file_upload_form() -> None:

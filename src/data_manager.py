@@ -44,29 +44,17 @@ def transform_data(df:pl.DataFrame) -> pl.DataFrame:
             pl.col(causale_col).alias('Causale'),
             (pl.col(causale_col) == 'EMOLUMENTI').alias('Salary')
         ])
-        return df.select([
-            'Date',
-            'Year',
-            'Month',
-            'Amount',
-            'Credit',
-            'Causale',
-            'Salary',
-            'Conto',
-            'Banca'
-        ])
-    else:
-        return df.select([
-            'Date',
-            'Year',
-            'Month',
-            'Amount',
-            'Credit',
-            pl.lit('').alias('Causale'),
-            pl.lit(False).alias('Salary'),
-            pl.lit(None).alias('Conto'),
-            pl.lit(None).alias('Banca')
-        ])
+    return df.select([
+        'Date',
+        'Year',
+        'Month',
+        'Amount',
+        'Credit',
+        'Causale' if causale_col else pl.lit('').alias('Causale'),
+        'Salary' if causale_col else pl.lit(False).alias('Salary'),
+        'Conto' if 'Conto' in df.columns else pl.lit(None).alias('Conto'),
+        'Banca' if 'Banca' in df.columns else pl.lit(None).alias('Banca')
+    ])
 
 @st.cache_data
 def load_data(filelist: list[Path]) -> pl.DataFrame:
