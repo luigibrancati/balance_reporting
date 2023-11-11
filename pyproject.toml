@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "balance-reporting"
+version = "0.1.0"
+description = "Small app for visualizing expenses"
+authors = ["luigi.brancati <luigi.brancati93@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "balance_reporting"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+plotly = "^5.14"
+polars = "^0.16"
+pydeck = "^0.8"
+statsmodels = "^0.13"
+streamlit = "^1.20"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
