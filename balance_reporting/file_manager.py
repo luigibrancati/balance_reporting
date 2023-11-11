@@ -4,7 +4,7 @@ import os
 from glob import glob
 import polars as pl
 from pathlib import Path
-from data_manager import transform_data
+from balance_reporting.data_manager.data_manager import transform_data
 
 def save_uploaded_files() -> None:
     if st.session_state['uploaded_files']:
