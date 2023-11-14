@@ -21,10 +21,10 @@ def load_saved_files() -> pl.DataFrame:
     files = list_files()
     df = pl.DataFrame()
     for f in files:
-        df = pl.concat(
+        df = pl.concat([
             df,
             pl.read_parquet(f)
-        )
+        ])
     return df
 
 
@@ -37,14 +37,14 @@ def save_uploaded_files() -> None:
         files = st.session_state['uploaded_files']
         file_df = pl.DataFrame()
         for upl_file in files:
-            temp_file_df = pl.read_csv(upl_file, has_header=True, separator=';', try_parse_dates=True)
-            temp_file_df = source_mapping[source](temp_file_df)
+            temp_file_df = pl.read_excel(upl_file, sheet_name="Movimenti")
+            temp_file_df = source_mapping[source]().transform_data(temp_file_df)
             file_df = pl.concat([
                 file_df,
                 temp_file_df
             ])
-        filename = f"{source}_{file_df[Fields.Date].min().strftime('%y%m%d')}_{file_df[Fields.Date].max().strftime('%y%m%d')}.parquet"
-        file_df.write_parquet(f"{DATA_FOLDER}/{user}/{filename}", separator=';', date_format='%Y-%m-%d', datetime_format='%Y-%m-%d')
+        filename = f"{source}_{file_df[Fields.Date.value].min().strftime('%y%m%d')}_{file_df[Fields.Date.value].max().strftime('%y%m%d')}.parquet"
+        file_df.write_parquet(f"{DATA_FOLDER}/{user}/{filename}")
 
 
 def file_upload_form() -> None:
