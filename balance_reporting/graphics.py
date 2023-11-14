@@ -3,6 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from config import CREDIT_DISCRETE_MAP, GRAPHICS_WIDTH_PX, MIN_FONT_SIZE
+from balance_reporting.data_reader.data_reader import Fields
 
 def indicators(df:pl.DataFrame) -> go.Figure:
     temp = df
@@ -15,7 +16,7 @@ def indicators(df:pl.DataFrame) -> go.Figure:
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=temp.filter(pl.col('Credit'))['Amount'].sum() - temp.filter(~pl.col('Credit'))['Amount'].sum(),
+            value=temp.filter(pl.col(Fields.Credit))[Fields.Amount].sum() - temp.filter(~pl.col(Fields.Credit))[Fields.Amount].sum(),
             delta={'reference':0.1, 'relative': True, 'valueformat':',.0%'},
             number={'prefix':'€', 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
             title={"text": 'Netto transazioni', 'font': {'size': indicator_title_size}}
@@ -26,7 +27,7 @@ def indicators(df:pl.DataFrame) -> go.Figure:
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=temp['Amount'].len(),
+            value=temp[Fields.Amount].len(),
             number={'valueformat':',.0f', 'font':{'size':indicator_font_size}},
             title={"text": '# transazioni', 'font': {'size': indicator_title_size}}
         ),
@@ -36,7 +37,7 @@ def indicators(df:pl.DataFrame) -> go.Figure:
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=temp.filter(pl.col('Credit'))['Amount'].max(),
+            value=temp.filter(pl.col(Fields.Credit))[Fields.Amount].max(),
             number={'prefix':'€', 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
             title={"text": 'Max in entrata', 'font': {'size': indicator_title_size}}
         ),
@@ -46,7 +47,7 @@ def indicators(df:pl.DataFrame) -> go.Figure:
     indicators.add_trace(
         go.Indicator(
             mode='number',
-            value=temp.filter(~pl.col('Credit'))['Amount'].max(),
+            value=temp.filter(~pl.col(Fields.Credit))[Fields.Amount].max(),
             number={'prefix':'€', 'valueformat':',.2f', 'font':{'size':indicator_font_size}},
             title={"text": 'Max in uscita', 'font': {'size': indicator_title_size}}
         ),
@@ -62,19 +63,19 @@ def indicators(df:pl.DataFrame) -> go.Figure:
 
 def piecharts(df:pl.DataFrame) -> go.Figure:
     temp = (
-        df.groupby('Credit')
+        df.groupby(Fields.Credit)
         .agg(
-            pl.col('Amount').sum().alias('Amount'),
-            pl.col('Date').count().alias('Count')
-        ).select('Credit', pl.col('Amount')/pl.col('Amount').sum(), pl.col('Count')/pl.col('Count').sum())
-        .sort('Credit', descending=True)
+            pl.col(Fields.Amount).sum().alias(Fields.Amount),
+            pl.col(Fields.Date).count().alias('Count')
+        ).select(Fields.Credit, pl.col(Fields.Amount)/pl.col(Fields.Amount).sum(), pl.col('Count')/pl.col('Count').sum())
+        .sort(Fields.Credit, descending=True)
     )
     fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]], subplot_titles=("Amount", "Count"))
     fig.add_trace(
         go.Pie(
-            labels = temp['Credit'].to_list(),
-            values = temp['Amount'].to_list(),
-            marker_colors = temp['Credit'].apply(lambda c: CREDIT_DISCRETE_MAP[c]).to_list(),
+            labels = temp[Fields.Credit].to_list(),
+            values = temp[Fields.Amount].to_list(),
+            marker_colors = temp[Fields.Credit].apply(lambda c: CREDIT_DISCRETE_MAP[c]).to_list(),
             hole = 0.4
         ),
         row=1,
@@ -82,9 +83,9 @@ def piecharts(df:pl.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Pie(
-            labels = temp['Credit'].to_list(),
+            labels = temp[Fields.Credit].to_list(),
             values = temp['Count'].to_list(),
-            marker_colors = temp['Credit'].apply(lambda c: CREDIT_DISCRETE_MAP[c]).to_list(),
+            marker_colors = temp[Fields.Credit].apply(lambda c: CREDIT_DISCRETE_MAP[c]).to_list(),
             hole = 0.4
         ),
         row=1,
@@ -93,7 +94,7 @@ def piecharts(df:pl.DataFrame) -> go.Figure:
     fig.update_layout(
         height=500,
         width=GRAPHICS_WIDTH_PX,
-        legend={'title':'Credit'},
+        legend={'title':Fields.Credit},
         uniformtext_mode='hide',
         uniformtext_minsize=MIN_FONT_SIZE,
     )
@@ -102,16 +103,16 @@ def piecharts(df:pl.DataFrame) -> go.Figure:
 def histplot(df:pl.DataFrame) -> go.Figure:
     fig = px.histogram(
         data_frame = df.to_pandas(),
-        x = 'Amount',
+        x = Fields.Amount,
         histnorm = 'percent',
         barmode='group',
-        color = 'Credit',
+        color = Fields.Credit,
         color_discrete_map = CREDIT_DISCRETE_MAP,
-        category_orders = {'Credit': [True, False]},
+        category_orders = {Fields.Credit: [True, False]},
         nbins = 40,
         height = 800,
         width=GRAPHICS_WIDTH_PX,
-        labels = {'Amount':'Amount (€)'}
+        labels = {Fields.Amount:'Amount (€)'}
     )
     fig.update_layout(
         uniformtext_mode='hide',
@@ -122,15 +123,15 @@ def histplot(df:pl.DataFrame) -> go.Figure:
 def scatter(df:pl.DataFrame) -> go.Figure:
     fig = px.scatter(
         data_frame = df.to_pandas(),
-        x = 'Date',
-        y = 'Amount',
-        color = 'Credit',
+        x = Fields.Date,
+        y = Fields.Amount,
+        color = Fields.Credit,
         color_discrete_map=CREDIT_DISCRETE_MAP,
-        category_orders = {'Credit': [True, False]},
+        category_orders = {Fields.Credit: [True, False]},
         height = 800,
         width=GRAPHICS_WIDTH_PX,
-        labels = {'Amount':'Amount (€)'},
-        hover_data=['Date', 'Amount', 'Credit', 'Conto']
+        labels = {Fields.Amount:'Amount (€)'},
+        hover_data=[Fields.Date, Fields.Amount, Fields.Credit, Fields.Bank]
     )
     fig.update_layout(
         uniformtext_mode='hide',
@@ -141,33 +142,33 @@ def scatter(df:pl.DataFrame) -> go.Figure:
 def month_barplot(df:pl.DataFrame) -> go.Figure:
     temp = (
         df.with_columns([
-            pl.col('Credit').cast(str),
-            pl.col('Date').dt.strftime('%Y-%m').alias('YearMonth')
+            pl.col(Fields.Credit).cast(str),
+            pl.col(Fields.Date).dt.strftime('%Y-%m').alias('YearMonth')
         ])
-        .groupby(['YearMonth', 'Credit'])
-        .agg(pl.sum('Amount').alias('Amount')).sort(['YearMonth', 'Credit'])
+        .groupby(['YearMonth', Fields.Credit])
+        .agg(pl.sum(Fields.Amount).alias(Fields.Amount)).sort(['YearMonth', Fields.Credit])
     )
     temp = pl.concat([
         temp,
-        temp.pivot(values='Amount', columns='Credit', index=['YearMonth'])
+        temp.pivot(values=Fields.Amount, columns=Fields.Credit, index=['YearMonth'])
         .select(
             'YearMonth',
-            pl.lit('total').alias('Credit'),
-            (pl.col('true') - pl.col('false')).alias('Amount')
+            pl.lit('total').alias(Fields.Credit),
+            (pl.col('true') - pl.col('false')).alias(Fields.Amount)
         )
     ])
     fig = px.bar(
         data_frame=temp.to_pandas(),
         x = 'YearMonth',
-        y = 'Amount',
-        color = 'Credit',
+        y = Fields.Amount,
+        color = Fields.Credit,
         barmode='group',
         color_discrete_map=CREDIT_DISCRETE_MAP,
-        category_orders = {'Credit': ['true', 'false', 'total']},
+        category_orders = {Fields.Credit: ['true', 'false', 'total']},
         height = 800,
         width=GRAPHICS_WIDTH_PX,
         text_auto = '.1f',
-        labels = {'Amount':'Amount (€)'}
+        labels = {Fields.Amount:'Amount (€)'}
     )
     fig.update_layout(
         uniformtext_mode='hide',
